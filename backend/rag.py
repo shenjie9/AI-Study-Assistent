@@ -103,14 +103,18 @@ def retrieve_relevant_chunks(question, index, chunks, top_k=4):
 
     return relevant_chunks
 
-def generate_answer(question, relevant_chunks):
-
+def build_prompt(question, relevant_chunks):
+    """
+    Build the prompt given to the selected LLM provider.
+    """
     context = "\n\n".join(relevant_chunks)
 
     prompt = f"""
 You are an AI study assistant.
 
-Use ONLY the provided context.
+Use ONLY the provided context to answer the question.
+If the context does not contain enough information, say:
+"I could not find enough information in the uploaded notes to answer this."
 
 Context:
 {context}
@@ -121,15 +125,12 @@ Question:
 Answer:
 """
 
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "llama3.2:1b",
-            "prompt": prompt,
-            "stream": False
-        }
-    )
+    return prompt
 
-    response.raise_for_status()
 
-    return response.json()["response"]
+def generate_answer(question, relevant_chunks, provider):
+    """
+    Generate an answer using the selected LLM provider.
+    """
+    prompt = build_prompt(question, relevant_chunks)
+    return provider.generate(prompt)
