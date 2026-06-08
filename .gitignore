@@ -8,8 +8,11 @@ __pycache__/
 # VS Code
 .vscode/
 
-# Ollama models/cache (just in case)
+# Ollama models/cache
 .ollama/
+
+# Generated documents
+backend/uploaded_document.pdf
 
 # OS files
 .DS_Store
