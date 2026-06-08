@@ -1,7 +1,6 @@
 import fitz
 import faiss
 import numpy as np
-import requests
 from sentence_transformers import SentenceTransformer
 
 
@@ -22,7 +21,7 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 
-def chunk_text(text, chunk_size=800, overlap=150):
+def chunk_text(text, chunk_size=500, overlap=100):
     """
     Split text into overlapping chunks.
     """
@@ -84,7 +83,7 @@ def create_vector_store(chunks):
     return index, chunks
 
 
-def retrieve_relevant_chunks(question, index, chunks, top_k=4):
+def retrieve_relevant_chunks(question, index, chunks, top_k=3):
     """
     Retrieve the chunks most semantically similar to the user's question.
     """
@@ -112,9 +111,14 @@ def build_prompt(question, relevant_chunks):
     prompt = f"""
 You are an AI study assistant.
 
-Use ONLY the provided context to answer the question.
-If the context does not contain enough information, say:
+Answer the question using the provided context.
+
+If the answer can be reasonably inferred from the context,
+provide the answer.
+
+Only say
 "I could not find enough information in the uploaded notes to answer this."
+if the answer truly does not appear in the context.
 
 Context:
 {context}
@@ -132,5 +136,6 @@ def generate_answer(question, relevant_chunks, provider):
     """
     Generate an answer using the selected LLM provider.
     """
+    relevant_chunks = [chunk[:1000] for chunk in relevant_chunks]
     prompt = build_prompt(question, relevant_chunks)
     return provider.generate(prompt)

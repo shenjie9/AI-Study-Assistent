@@ -6,6 +6,8 @@ from rag import (
     generate_answer
 )
 
+from llm.factory import get_provider
+
 pdf_path = "backend/csc311_study_notes.pdf"
 
 text = extract_text_from_pdf(pdf_path)
@@ -16,7 +18,11 @@ chunks = chunk_text(text)
 
 print(f"Created {len(chunks)} chunks.")
 
+print("Creating vector store...")
+
 index, chunks = create_vector_store(chunks)
+
+print("Vector store ready.")
 
 question = input("Ask a question: ")
 
@@ -28,7 +34,11 @@ for i, chunk in enumerate(results):
     print(f"\n----- Chunk {i + 1} -----\n")
     print(chunk[:500])
 
-answer = generate_answer(question, results)
+provider_name = input("\nChoose LLM provider (ollama/openai): ").strip().lower()
+
+provider = get_provider(provider_name)
+
+answer = generate_answer(question, results, provider)
 
 print("\nAI Answer:\n")
 print(answer)
