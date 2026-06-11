@@ -2,6 +2,7 @@ import os
 import shutil
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from rag import (
     extract_text_from_pdf,
@@ -15,6 +16,10 @@ from llm.factory import get_provider
 
 
 app = FastAPI(title="AI Study Assistant API")
+
+@app.on_event("startup")
+async def startup_event():
+    print("AI Study Assistant API started successfully.")
 
 app.add_middleware(
     CORSMiddleware,
@@ -89,3 +94,8 @@ async def ask_question(
         "answer": answer,
         "retrieved_chunks": relevant_chunks,
     }
+
+
+@app.get("/")
+def root():
+    return RedirectResponse("/docs")
