@@ -11,6 +11,9 @@ __pycache__/
 # Ollama models/cache
 .ollama/
 
+# Runtime logs
+ollama.log
+
 # Generated documents
 backend/uploaded_document.pdf
 
