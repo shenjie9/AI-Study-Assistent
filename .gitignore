@@ -1,3 +1,8 @@
+# React / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
 # Python
 __pycache__/
 *.pyc
