@@ -1,5 +1,5 @@
 import faiss
-import fitz
+import pymupdf
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -8,7 +8,7 @@ embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text_from_pdf(pdf_path):
     """Extract all text from a PDF."""
-    document = fitz.open(pdf_path)
+    document = pymupdf.open(pdf_path)
     text = ""
 
     for page in document:
