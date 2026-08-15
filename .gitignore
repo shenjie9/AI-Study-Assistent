@@ -1,26 +1,55 @@
+# -------------------------
+# Python
+# -------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# -------------------------
+# Environment variables / secrets
+# -------------------------
+.env
+.env.*
+!.env.example
+
+# -------------------------
 # React / Node
-frontend/node_modules/
+# -------------------------
+node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/*.local
 
-# Python
-__pycache__/
-*.pyc
+# Test coverage
+coverage/
+.coverage
 
-# Environment variables
-.env
-
-# VS Code
-.vscode/
-
-# Ollama models/cache
-.ollama/
-
-# Runtime logs
-ollama.log
-
-# Generated documents
+# -------------------------
+# Runtime / generated files
+# -------------------------
+*.log
 backend/uploaded_document.pdf
 
+# -------------------------
+# Editors
+# -------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -------------------------
 # OS files
+# -------------------------
 .DS_Store
+Thumbs.db
+
+# -------------------------
+# Ollama local data
+# -------------------------
+.ollama/

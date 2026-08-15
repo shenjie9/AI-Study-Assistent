@@ -1,16 +1,13 @@
-import fitz
 import faiss
+import fitz
 import numpy as np
 from sentence_transformers import SentenceTransformer
-
 
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def extract_text_from_pdf(pdf_path):
-    """
-    Extract all text from a PDF.
-    """
+    """Extract all text from a PDF."""
     document = fitz.open(pdf_path)
     text = ""
 
@@ -22,9 +19,7 @@ def extract_text_from_pdf(pdf_path):
 
 
 def chunk_text(text, chunk_size=500, overlap=100):
-    """
-    Split text into overlapping chunks.
-    """
+    """Split text into overlapping chunks."""
     chunks = []
     start = 0
 
@@ -39,44 +34,16 @@ def chunk_text(text, chunk_size=500, overlap=100):
 
     return chunks
 
-"""FAISS search using L2 distance 
-def create_vector_store(chunks):
-    embeddings = embedding_model.encode(chunks)
-    embeddings = np.array(embeddings).astype("float32")
-
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(embeddings)
-
-    return index, chunks
-
-
-def retrieve_relevant_chunks(question, index, chunks, top_k=3):
-    question_embedding = embedding_model.encode([question])
-    question_embedding = np.array(question_embedding).astype("float32")
-    distances, indices = index.search(question_embedding, top_k)
-
-    relevant_chunks = []
-
-    for i in indices[0]:
-        relevant_chunks.append(chunks[i])
-
-    return relevant_chunks
-"""
 
 def create_vector_store(chunks):
-    """
-    Convert chunks into embeddings and store them in a FAISS index using cosine similarity.
-    """
+    """Embed chunks and store them in FAISS for cosine-similarity search."""
     embeddings = embedding_model.encode(chunks)
-    embeddings = np.array(embeddings).astype("float32")
+    embeddings = np.asarray(embeddings, dtype="float32")
 
-    # Normalize vectors so inner product becomes cosine similarity
+    # Inner product on L2-normalized vectors is cosine similarity.
     faiss.normalize_L2(embeddings)
 
     dimension = embeddings.shape[1]
-
-    # Inner product on normalized vectors = cosine similarity
     index = faiss.IndexFlatIP(dimension)
     index.add(embeddings)
 
@@ -84,40 +51,26 @@ def create_vector_store(chunks):
 
 
 def retrieve_relevant_chunks(question, index, chunks, top_k=3):
-    """
-    Retrieve the chunks most semantically similar to the user's question.
-    """
+    """Return the chunks most semantically similar to a question."""
     question_embedding = embedding_model.encode([question])
-    question_embedding = np.array(question_embedding).astype("float32")
-
-    # Normalize question vector for cosine similarity
+    question_embedding = np.asarray(question_embedding, dtype="float32")
     faiss.normalize_L2(question_embedding)
 
-    similarities, indices = index.search(question_embedding, top_k)
+    _, indices = index.search(question_embedding, min(top_k, len(chunks)))
+    return [chunks[i] for i in indices[0] if 0 <= i < len(chunks)]
 
-    relevant_chunks = []
-
-    for i in indices[0]:
-        relevant_chunks.append(chunks[i])
-
-    return relevant_chunks
 
 def build_prompt(question, relevant_chunks):
-    """
-    Build the prompt given to the selected LLM provider.
-    """
+    """Build a context-grounded prompt for the selected LLM provider."""
     context = "\n\n".join(relevant_chunks)
 
-    prompt = f"""
+    return f"""
 You are an AI study assistant.
 
 Answer the question using the provided context.
 
-If the answer can be reasonably inferred from the context,
-provide the answer.
-
-Only say
-"I could not find enough information in the uploaded notes to answer this."
+If the answer can be reasonably inferred from the context, provide the answer.
+Only say "I could not find enough information in the uploaded notes to answer this."
 if the answer truly does not appear in the context.
 
 Context:
@@ -127,15 +80,11 @@ Question:
 {question}
 
 Answer:
-"""
-
-    return prompt
+""".strip()
 
 
 def generate_answer(question, relevant_chunks, provider):
-    """
-    Generate an answer using the selected LLM provider.
-    """
+    """Generate an answer using the selected LLM provider."""
     relevant_chunks = [chunk[:1000] for chunk in relevant_chunks]
     prompt = build_prompt(question, relevant_chunks)
     return provider.generate(prompt)
